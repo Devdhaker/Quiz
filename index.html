@@ -3,15 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Photo Upload with Filter</title>
+  <title>HEIC to JPEG Conversion Example</title>
   <style>
-    /* CSS class jisse filter apply hoga */
     .filtered-image {
       max-width: 100%;
       filter: grayscale(100%) brightness(1.2) contrast(1.2);
       transition: filter 0.5s;
     }
-    /* Hover par filter remove hone ka effect */
     .filtered-image:hover {
       filter: none;
     }
@@ -27,34 +25,56 @@
   </style>
 </head>
 <body>
-  <h2>Apni Photo Upload Karein</h2>
-  <!-- Photo upload ke liye file input -->
+  <h2>Apni Photo Upload Karein (HEIC Supported)</h2>
   <input type="file" id="photoInput" accept="image/*">
   <div id="errorMessage"></div>
   <br>
-  <!-- Uploaded photo yahan display hogi -->
   <img id="displayImage" class="filtered-image" src="" alt="Uploaded Photo" style="display:none;">
 
+  <!-- heic2any लाइब्रेरी (CDN से) -->
+  <script src="https://unpkg.com/heic2any/dist/heic2any.js"></script>
   <script>
-    document.getElementById('photoInput').addEventListener('change', function(event) {
+    document.getElementById('photoInput').addEventListener('change', async function(event) {
       const file = event.target.files[0];
       const errorMessageDiv = document.getElementById('errorMessage');
-      errorMessageDiv.textContent = ""; // Error message reset karein
+      const displayImage = document.getElementById('displayImage');
+      errorMessageDiv.textContent = ""; 
+      displayImage.style.display = 'none';
 
       if (file) {
         // Check karein ki file ek image hai ya nahi
         if (!file.type.startsWith('image/')) {
           errorMessageDiv.textContent = "Kripya ek valid image file upload karein.";
-          document.getElementById('displayImage').style.display = 'none';
           return;
         }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const img = document.getElementById('displayImage');
-          img.src = e.target.result;
-          img.style.display = 'block';
+
+        // Agar file ka type heic ya heif hai, to heic2any se convert karne ki koshish karein
+        if (file.type === 'image/heic' || file.type === 'image/heif') {
+          try {
+            const convertedBlob = await heic2any({
+              blob: file,
+              toType: 'image/jpeg',
+              quality: 0.8
+            });
+            // Ab convertedBlob ko FileReader se read karein
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              displayImage.src = e.target.result;
+              displayImage.style.display = 'block';
+            };
+            reader.readAsDataURL(convertedBlob);
+          } catch (error) {
+            errorMessageDiv.textContent = "HEIC फ़ाइल को कन्वर्ट करने में समस्या आ रही है।";
+          }
+        } else {
+          // Agar file heic nahi hai, to seedha FileReader se read karein
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            displayImage.src = e.target.result;
+            displayImage.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
         }
-        reader.readAsDataURL(file);
       }
     });
   </script>
