@@ -14,8 +14,11 @@
     </style>
 </head>
 <body>
-    <h2>Resize & Crop Image to 200x300</h2>
+    <h2>Resize & Crop Image</h2>
     <input type="file" id="upload" accept="image/*">
+    <br>
+    <label>Width: <input type="number" id="width" value="200"></label>
+    <label>Height: <input type="number" id="height" value="300"></label>
     <div id="image-container">
         <img id="image" style="max-width:100%;">
     </div>
@@ -34,7 +37,7 @@
                     cropper.destroy();
                 }
                 cropper = new Cropper(img, {
-                    aspectRatio: 2 / 3,
+                    aspectRatio: NaN,
                     viewMode: 2,
                     zoomable: true,
                     scalable: true,
@@ -46,7 +49,9 @@
         
         document.getElementById('crop').addEventListener('click', function() {
             if (!cropper) return;
-            let canvas = cropper.getCroppedCanvas({ width: 300, height: 200 });
+            let width = parseInt(document.getElementById('width').value) || 200;
+            let height = parseInt(document.getElementById('height').value) || 300;
+            let canvas = cropper.getCroppedCanvas({ width: width, height: height });
             let resizedImage = canvas.toDataURL('image/png');
             let imgTag = document.createElement('img');
             imgTag.src = resizedImage;
