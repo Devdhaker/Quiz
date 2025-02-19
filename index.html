@@ -10,7 +10,7 @@
     <style>
         body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
         .container { max-width: 600px; margin-top: 30px; }
-        #image-container { max-width: 100%; height: auto; margin-top: 20px; }
+        #image-container, #background-container { max-width: 100%; height: auto; margin-top: 20px; }
         img { max-width: 100%; display: block; margin: auto; }
         .btn-custom { width: 100%; margin-top: 10px; }
         #preview img { max-width: 100%; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
@@ -29,9 +29,15 @@
         <div id="image-container" class="mt-3">
             <img id="image">
         </div>
-        <button id="crop" class="btn btn-primary btn-custom">Crop & Download</button>
+        
+        <h4 class="text-center mt-4">Select Background Image (1080x1920)</h4>
+        <input type="file" class="form-control" id="upload-background" accept="image/*">
+        <div id="background-container" class="mt-3">
+            <img id="background" style="width: 100%; height: auto;">
+        </div>
+        
+        <button id="crop" class="btn btn-primary btn-custom">Crop & Merge</button>
         <div id="preview" class="mt-3 text-center"></div>
-        <button id="next-btn" class="btn btn-success btn-custom" style="display: none;">Next</button>
     </div>
     
     <script>
@@ -55,23 +61,55 @@
             reader.readAsDataURL(file);
         });
         
+        document.getElementById('upload-background').addEventListener('change', function(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('background').src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        });
+        
         document.getElementById('crop').addEventListener('click', function() {
             if (!cropper) return;
             let width = parseInt(document.getElementById('width').value) || 200;
             let height = parseInt(document.getElementById('height').value) || 300;
             let canvas = cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
-            let resizedImage = canvas.toDataURL('image/png', 1.0); // Maintain original quality
-            let imgTag = document.createElement('img');
-            imgTag.src = resizedImage;
-            let link = document.createElement('a');
-            link.href = resizedImage;
-            link.download = 'cropped-image.png';
-            link.className = 'btn btn-success mt-2';
-            link.innerText = 'Download Image';
-            document.getElementById('preview').innerHTML = '';
-            document.getElementById('preview').appendChild(imgTag);
-            document.getElementById('preview').appendChild(link);
-            document.getElementById('next-btn').style.display = 'block';
+            
+            let bgImg = document.getElementById('background');
+            if (!bgImg.src) {
+                alert('Please select a background image.');
+                return;
+            }
+            
+            let finalCanvas = document.createElement('canvas');
+            finalCanvas.width = 1080;
+            finalCanvas.height = 1920;
+            let ctx = finalCanvas.getContext('2d');
+            
+            let bg = new Image();
+            bg.src = bgImg.src;
+            bg.onload = function() {
+                ctx.drawImage(bg, 0, 0, 1080, 1920);
+                let croppedImg = new Image();
+                croppedImg.src = canvas.toDataURL('image/png', 1.0);
+                croppedImg.onload = function() {
+                    ctx.drawImage(croppedImg, (1080 - width) / 2, (1920 - height) / 2, width, height);
+                    let finalImage = finalCanvas.toDataURL('image/png', 1.0);
+                    
+                    let imgTag = document.createElement('img');
+                    imgTag.src = finalImage;
+                    let link = document.createElement('a');
+                    link.href = finalImage;
+                    link.download = 'final-image.png';
+                    link.className = 'btn btn-success mt-2';
+                    link.innerText = 'Download Merged Image';
+                    document.getElementById('preview').innerHTML = '';
+                    document.getElementById('preview').appendChild(imgTag);
+                    document.getElementById('preview').appendChild(link);
+                };
+            };
         });
     </script>
 </body>
