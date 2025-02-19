@@ -24,6 +24,13 @@
     <input type="file" id="bgUpload" accept="image/*">
     <input type="file" id="overlayUpload" accept="image/*">
     <input type="text" id="textInput" placeholder="Enter text">
+    <select id="fontSelector">
+        <option value="Arial">Arial</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Georgia">Georgia</option>
+    </select>
     <button onclick="addText()">Add Text</button>
     <div id="canvas-container">
         <canvas id="editorCanvas"></canvas>
@@ -37,8 +44,10 @@
         let overlayImage = new Image();
         let overlayLoaded = false;
         let textValue = "";
+        let textX = 50, textY = 50, textSize = 20;
         let overlayX = 100, overlayY = 100, overlayWidth = 100, overlayHeight = 100;
-        let dragging = false;
+        let draggingOverlay = false;
+        let draggingText = false;
 
         canvas.width = 500;
         canvas.height = 400;
@@ -86,9 +95,9 @@
                 ctx.drawImage(overlayImage, overlayX, overlayY, overlayWidth, overlayHeight);
             }
             if (textValue) {
-                ctx.font = "20px Arial";
+                ctx.font = `${textSize}px ${document.getElementById('fontSelector').value}`;
                 ctx.fillStyle = "red";
-                ctx.fillText(textValue, 50, 50);
+                ctx.fillText(textValue, textX, textY);
             }
         }
 
@@ -97,21 +106,29 @@
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
             if (x > overlayX && x < overlayX + overlayWidth && y > overlayY && y < overlayY + overlayHeight) {
-                dragging = true;
+                draggingOverlay = true;
+            } else if (x > textX - 50 && x < textX + 50 && y > textY - 20 && y < textY + 20) {
+                draggingText = true;
             }
         });
 
         canvas.addEventListener('mousemove', function (event) {
-            if (dragging) {
+            if (draggingOverlay) {
                 const rect = canvas.getBoundingClientRect();
                 overlayX = event.clientX - rect.left - overlayWidth / 2;
                 overlayY = event.clientY - rect.top - overlayHeight / 2;
+                drawCanvas();
+            } else if (draggingText) {
+                const rect = canvas.getBoundingClientRect();
+                textX = event.clientX - rect.left;
+                textY = event.clientY - rect.top;
                 drawCanvas();
             }
         });
 
         canvas.addEventListener('mouseup', function () {
-            dragging = false;
+            draggingOverlay = false;
+            draggingText = false;
         });
 
         canvas.addEventListener('wheel', function (event) {
@@ -122,6 +139,14 @@
                 } else {
                     overlayWidth *= 0.9;
                     overlayHeight *= 0.9;
+                }
+                drawCanvas();
+                event.preventDefault();
+            } else if (textValue) {
+                if (event.deltaY < 0) {
+                    textSize += 2;
+                } else {
+                    textSize -= 2;
                 }
                 drawCanvas();
                 event.preventDefault();
