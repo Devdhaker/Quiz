@@ -132,6 +132,11 @@
     let draggingOverlay = false;
     let draggingText = false;
 
+    // Variables for pinch gesture (scaling overlay)
+    let initialDistance = null;
+    let initialOverlayWidth = null;
+    let initialOverlayHeight = null;
+
     // Set initial canvas dimensions as placeholder
     canvas.width = 800;
     canvas.height = 600;
@@ -198,27 +203,42 @@
       }
     }
 
-    canvas.addEventListener('mousedown', function (event) {
+    // Helper function to get canvas coordinates from event
+    function getEventCoords(event) {
       const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      // Check if click is within overlay image bounds
-      if (overlayLoaded && x > overlayX && x < overlayX + overlayWidth && y > overlayY && y < overlayY + overlayHeight) {
+      let clientX, clientY;
+      if (event.touches && event.touches.length > 0) {
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+      } else {
+        clientX = event.clientX;
+        clientY = event.clientY;
+      }
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', function (event) {
+      const pos = getEventCoords(event);
+      if (overlayLoaded && pos.x > overlayX && pos.x < overlayX + overlayWidth && pos.y > overlayY && pos.y < overlayY + overlayHeight) {
         draggingOverlay = true;
-      } else if (textValue && x > textX - 50 && x < textX + 50 && y > textY - 30 && y < textY + 30) {
+      } else if (textValue && pos.x > textX - 50 && pos.x < textX + 50 && pos.y > textY - 30 && pos.y < textY + 30) {
         draggingText = true;
       }
     });
 
     canvas.addEventListener('mousemove', function (event) {
-      const rect = canvas.getBoundingClientRect();
+      const pos = getEventCoords(event);
       if (draggingOverlay) {
-        overlayX = event.clientX - rect.left - overlayWidth / 2;
-        overlayY = event.clientY - rect.top - overlayHeight / 2;
+        overlayX = pos.x - overlayWidth / 2;
+        overlayY = pos.y - overlayHeight / 2;
         drawCanvas();
       } else if (draggingText) {
-        textX = event.clientX - rect.left;
-        textY = event.clientY - rect.top;
+        textX = pos.x;
+        textY = pos.y;
         drawCanvas();
       }
     });
@@ -228,6 +248,68 @@
       draggingText = false;
     });
 
+    canvas.addEventListener('mouseleave', function () {
+      draggingOverlay = false;
+      draggingText = false;
+    });
+
+    // Touch events for mobile
+    canvas.addEventListener('touchstart', function (event) {
+      event.preventDefault();
+      if (event.touches.length === 1) {
+        const pos = getEventCoords(event);
+        if (overlayLoaded && pos.x > overlayX && pos.x < overlayX + overlayWidth && pos.y > overlayY && pos.y < overlayY + overlayHeight) {
+          draggingOverlay = true;
+        } else if (textValue && pos.x > textX - 50 && pos.x < textX + 50 && pos.y > textY - 30 && pos.y < textY + 30) {
+          draggingText = true;
+        }
+      } else if (event.touches.length === 2 && overlayLoaded) {
+        // Pinch gesture start
+        initialDistance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+        initialOverlayWidth = overlayWidth;
+        initialOverlayHeight = overlayHeight;
+      }
+    }, {passive: false});
+
+    canvas.addEventListener('touchmove', function (event) {
+      event.preventDefault();
+      if (event.touches.length === 1) {
+        const pos = getEventCoords(event);
+        if (draggingOverlay) {
+          overlayX = pos.x - overlayWidth / 2;
+          overlayY = pos.y - overlayHeight / 2;
+          drawCanvas();
+        } else if (draggingText) {
+          textX = pos.x;
+          textY = pos.y;
+          drawCanvas();
+        }
+      } else if (event.touches.length === 2 && overlayLoaded && initialDistance) {
+        // Pinch gesture move: scale overlay image
+        const currentDistance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+        const scale = currentDistance / initialDistance;
+        overlayWidth = initialOverlayWidth * scale;
+        overlayHeight = initialOverlayHeight * scale;
+        drawCanvas();
+      }
+    }, {passive: false});
+
+    canvas.addEventListener('touchend', function (event) {
+      // Reset drag flags if no touches remain
+      if (event.touches.length === 0) {
+        draggingOverlay = false;
+        draggingText = false;
+        initialDistance = null;
+      }
+    });
+
+    // Wheel event for desktop scaling (if needed)
     canvas.addEventListener('wheel', function (event) {
       if (overlayLoaded) {
         if (event.deltaY < 0) {
