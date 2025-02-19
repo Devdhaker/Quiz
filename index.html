@@ -41,7 +41,7 @@
         <br>
         <input type="text" id="nameInput" placeholder="Enter ID Name">
         <input type="text" id="commentInput" placeholder="Enter Comment">
-        <input type="text" id="imageURL" placeholder="Enter Image/Video URL">
+        <input type="file" id="imageFile" accept="image/*,video/mp4">
         <button onclick="generateMeme()">Generate</button>
         <div class="controls">
             <button onclick="zoomIn()">Zoom In</button>
@@ -53,24 +53,27 @@
         function generateMeme() {
             document.getElementById('idName').innerText = document.getElementById('nameInput').value;
             document.getElementById('userComment').innerText = document.getElementById('commentInput').value;
-            let mediaURL = document.getElementById('imageURL').value;
+            let file = document.getElementById('imageFile').files[0];
             let memeWrapper = document.getElementById('memeWrapper');
             
-            if (mediaURL.endsWith('.mp4')) {
-                memeWrapper.innerHTML = `<video class="meme-media" controls><source src="${mediaURL}" type="video/mp4"></video>`;
-            } else {
-                memeWrapper.innerHTML = `<img id="memeMedia" class="meme-media" src="${mediaURL}" alt="Meme Image">`;
+            if (file) {
+                let fileURL = URL.createObjectURL(file);
+                if (file.type.includes('video')) {
+                    memeWrapper.innerHTML = `<video class="meme-media" controls><source src="${fileURL}" type="${file.type}"></video>`;
+                } else {
+                    memeWrapper.innerHTML = `<img id="memeMedia" class="meme-media" src="${fileURL}" alt="Meme Image">`;
+                }
             }
         }
 
         function zoomIn() {
             let memeMedia = document.querySelector('.meme-media');
-            memeMedia.style.transform = 'scale(1.2)';
+            if (memeMedia) memeMedia.style.transform = 'scale(1.2)';
         }
 
         function zoomOut() {
             let memeMedia = document.querySelector('.meme-media');
-            memeMedia.style.transform = 'scale(1)';
+            if (memeMedia) memeMedia.style.transform = 'scale(1)';
         }
     </script>
 </body>
