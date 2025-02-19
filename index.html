@@ -19,11 +19,26 @@
             display: inline-block;
             position: relative;
         }
+        .meme-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .meme-overlay {
+            position: absolute;
+            top: 30%;
+            left: 10%;
+            right: 10%;
+            bottom: 20%;
+            background-color: yellow;
+            opacity: 0.5;
+            pointer-events: none;
+        }
         .meme-media {
             max-width: 100%;
             height: auto;
             margin-top: 10px;
             transition: transform 0.2s;
+            display: block;
         }
         .controls {
             margin-top: 10px;
@@ -35,7 +50,8 @@
     <div class="meme-container">
         <p><strong>ID Name:</strong> <span id="idName">User123</span></p>
         <p><strong>Comment:</strong> <span id="userComment">This is a funny meme!</span></p>
-        <div id="memeWrapper">
+        <div class="meme-wrapper" id="memeWrapper">
+            <div class="meme-overlay"></div>
             <img id="memeMedia" class="meme-media" src="https://via.placeholder.com/300" alt="Meme Image">
         </div>
         <br>
@@ -59,9 +75,9 @@
             if (file) {
                 let fileURL = URL.createObjectURL(file);
                 if (file.type.includes('video')) {
-                    memeWrapper.innerHTML = `<video class="meme-media" controls><source src="${fileURL}" type="${file.type}"></video>`;
+                    memeWrapper.innerHTML = `<div class="meme-overlay"></div><video class="meme-media" controls><source src="${fileURL}" type="${file.type}"></video>`;
                 } else {
-                    memeWrapper.innerHTML = `<img id="memeMedia" class="meme-media" src="${fileURL}" alt="Meme Image">`;
+                    memeWrapper.innerHTML = `<div class="meme-overlay"></div><img id="memeMedia" class="meme-media" src="${fileURL}" alt="Meme Image">`;
                 }
             }
         }
