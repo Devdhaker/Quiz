@@ -49,7 +49,7 @@
                     viewMode: 2,
                     zoomable: true,
                     scalable: true,
-                    movable: true
+                    movable: true,
                 });
             }
             reader.readAsDataURL(file);
@@ -59,8 +59,8 @@
             if (!cropper) return;
             let width = parseInt(document.getElementById('width').value) || 200;
             let height = parseInt(document.getElementById('height').value) || 300;
-            let canvas = cropper.getCroppedCanvas({ width: width, height: height });
-            let resizedImage = canvas.toDataURL('image/png');
+            let canvas = cropper.getCroppedCanvas({ width: width, height: height, imageSmoothingQuality: 'high' });
+            let resizedImage = canvas.toDataURL('image/png', 1.0); // Maintain high quality
             let imgTag = document.createElement('img');
             imgTag.src = resizedImage;
             let link = document.createElement('a');
