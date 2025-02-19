@@ -1,82 +1,77 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HEIC to JPEG Conversion Example</title>
-  <style>
-    .filtered-image {
-      max-width: 100%;
-      filter: grayscale(100%) brightness(1.2) contrast(1.2);
-      transition: filter 0.5s;
-    }
-    .filtered-image:hover {
-      filter: none;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      text-align: center;
-    }
-    #errorMessage {
-      color: red;
-      margin-top: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .meme-container {
+            background-color: #444;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            position: relative;
+        }
+        .meme-media {
+            max-width: 100%;
+            height: auto;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+        .controls {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-  <h2>Apni Photo Upload Karein (HEIC Supported)</h2>
-  <input type="file" id="photoInput" accept="image/*">
-  <div id="errorMessage"></div>
-  <br>
-  <img id="displayImage" class="filtered-image" src="" alt="Uploaded Photo" style="display:none;">
+    <h1>Create Your Meme</h1>
+    <div class="meme-container">
+        <p><strong>ID Name:</strong> <span id="idName">User123</span></p>
+        <p><strong>Comment:</strong> <span id="userComment">This is a funny meme!</span></p>
+        <div id="memeWrapper">
+            <img id="memeMedia" class="meme-media" src="https://via.placeholder.com/300" alt="Meme Image">
+        </div>
+        <br>
+        <input type="text" id="nameInput" placeholder="Enter ID Name">
+        <input type="text" id="commentInput" placeholder="Enter Comment">
+        <input type="text" id="imageURL" placeholder="Enter Image/Video URL">
+        <button onclick="generateMeme()">Generate</button>
+        <div class="controls">
+            <button onclick="zoomIn()">Zoom In</button>
+            <button onclick="zoomOut()">Zoom Out</button>
+        </div>
+    </div>
 
-  <!-- heic2any लाइब्रेरी (CDN से) -->
-  <script src="https://unpkg.com/heic2any/dist/heic2any.js"></script>
-  <script>
-    document.getElementById('photoInput').addEventListener('change', async function(event) {
-      const file = event.target.files[0];
-      const errorMessageDiv = document.getElementById('errorMessage');
-      const displayImage = document.getElementById('displayImage');
-      errorMessageDiv.textContent = ""; 
-      displayImage.style.display = 'none';
-
-      if (file) {
-        // Check karein ki file ek image hai ya nahi
-        if (!file.type.startsWith('image/')) {
-          errorMessageDiv.textContent = "Kripya ek valid image file upload karein.";
-          return;
+    <script>
+        function generateMeme() {
+            document.getElementById('idName').innerText = document.getElementById('nameInput').value;
+            document.getElementById('userComment').innerText = document.getElementById('commentInput').value;
+            let mediaURL = document.getElementById('imageURL').value;
+            let memeWrapper = document.getElementById('memeWrapper');
+            
+            if (mediaURL.endsWith('.mp4')) {
+                memeWrapper.innerHTML = `<video class="meme-media" controls><source src="${mediaURL}" type="video/mp4"></video>`;
+            } else {
+                memeWrapper.innerHTML = `<img id="memeMedia" class="meme-media" src="${mediaURL}" alt="Meme Image">`;
+            }
         }
 
-        // Agar file ka type heic ya heif hai, to heic2any se convert karne ki koshish karein
-        if (file.type === 'image/heic' || file.type === 'image/heif') {
-          try {
-            const convertedBlob = await heic2any({
-              blob: file,
-              toType: 'image/jpeg',
-              quality: 0.8
-            });
-            // Ab convertedBlob ko FileReader se read karein
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              displayImage.src = e.target.result;
-              displayImage.style.display = 'block';
-            };
-            reader.readAsDataURL(convertedBlob);
-          } catch (error) {
-            errorMessageDiv.textContent = "HEIC फ़ाइल को कन्वर्ट करने में समस्या आ रही है।";
-          }
-        } else {
-          // Agar file heic nahi hai, to seedha FileReader se read karein
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            displayImage.src = e.target.result;
-            displayImage.style.display = 'block';
-          };
-          reader.readAsDataURL(file);
+        function zoomIn() {
+            let memeMedia = document.querySelector('.meme-media');
+            memeMedia.style.transform = 'scale(1.2)';
         }
-      }
-    });
-  </script>
+
+        function zoomOut() {
+            let memeMedia = document.querySelector('.meme-media');
+            memeMedia.style.transform = 'scale(1)';
+        }
+    </script>
 </body>
 </html>
