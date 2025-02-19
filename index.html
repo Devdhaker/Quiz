@@ -3,38 +3,120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Editor</title>
+  <title>Premium Image Editor</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* Global Styles */
     body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f06, #4a90e2);
+      color: #fff;
       text-align: center;
-      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      transition: background 0.5s ease;
     }
+    h2 {
+      margin-top: 20px;
+      font-size: 2.5em;
+      font-family: 'Montserrat', sans-serif;
+    }
+    /* Input & Select Styles */
+    input[type="file"],
+    input[type="text"],
+    select {
+      margin: 10px;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+      font-size: 1em;
+    }
+    input[type="file"] {
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+    }
+    input[type="text"] {
+      width: 220px;
+    }
+    select {
+      background: #fff;
+      color: #333;
+    }
+    /* Button Styles */
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      font-family: 'Poppins', sans-serif;
+      border: none;
+      border-radius: 25px;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: #333;
+      color: #fff;
+    }
+    /* Canvas Container */
     #canvas-container {
       position: relative;
       display: inline-block;
-      border: 1px solid black;
+      border: 2px solid #fff;
+      margin-top: 20px;
+      box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease;
+      background: #000;
+    }
+    #canvas-container:hover {
+      transform: scale(1.02);
     }
     canvas {
       cursor: move;
+      max-width: 100%;
+      height: auto;
+    }
+    @media (max-width: 768px) {
+      h2 {
+        font-size: 2em;
+      }
+      button {
+        padding: 8px 16px;
+        font-size: 0.9em;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>Upload Your Image</h2>
-  <input type="file" id="bgUpload" accept="image/*">
-  <input type="file" id="overlayUpload" accept="image/*">
-  <input type="text" id="textInput" placeholder="Enter text">
-  <select id="fontSelector">
-    <option value="Arial">Arial</option>
-    <option value="Verdana">Verdana</option>
-    <option value="Times New Roman">Times New Roman</option>
-    <option value="Courier New">Courier New</option>
-    <option value="Georgia">Georgia</option>
-  </select>
-  <button onclick="addText()">Add Text</button>
+  <h2>Premium Image Editor</h2>
+  <div>
+    <input type="file" id="bgUpload" accept="image/*">
+    <input type="file" id="overlayUpload" accept="image/*">
+    <br>
+    <input type="text" id="textInput" placeholder="Enter text">
+    <select id="fontSelector">
+      <option value="Roboto">Roboto</option>
+      <option value="Lato">Lato</option>
+      <option value="Montserrat">Montserrat</option>
+      <option value="Poppins">Poppins</option>
+      <option value="Open Sans">Open Sans</option>
+      <option value="Arial">Arial</option>
+      <option value="Verdana">Verdana</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+    </select>
+    <button onclick="addText()">Add Text</button>
+  </div>
   <div id="canvas-container">
     <canvas id="editorCanvas"></canvas>
   </div>
+  <br>
   <button onclick="downloadImage()">Download</button>
 
   <script>
@@ -44,13 +126,17 @@
     let overlayImage = new Image();
     let overlayLoaded = false;
     let textValue = "";
-    let textX = 50, textY = 50, textSize = 20;
+    let textX = 50, textY = 50, textSize = 30;
     let overlayX = 100, overlayY = 100;
     let overlayWidth, overlayHeight;
     let draggingOverlay = false;
     let draggingText = false;
 
-    // बैकग्राउंड इमेज अपलोड और लोड होने पर canvas का साइज़ सेट करें
+    // Set initial canvas dimensions as placeholder
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // Background Image Upload
     document.getElementById('bgUpload').addEventListener('change', function (event) {
       const file = event.target.files[0];
       if (file) {
@@ -63,13 +149,13 @@
     });
 
     bgImage.onload = function () {
-      // canvas का साइज़ बैकग्राउंड इमेज के नेचुरल साइज़ के अनुसार सेट करें
+      // Set canvas dimensions to background image's natural size
       canvas.width = bgImage.naturalWidth;
       canvas.height = bgImage.naturalHeight;
       drawCanvas();
     };
 
-    // ओवरले इमेज अपलोड और लोड होने पर उसके ऑरिजिनल साइज़ का उपयोग करें
+    // Overlay Image Upload
     document.getElementById('overlayUpload').addEventListener('change', function (event) {
       const file = event.target.files[0];
       if (file) {
@@ -83,7 +169,7 @@
 
     overlayImage.onload = function () {
       overlayLoaded = true;
-      // ओवरले इमेज के ऑरिजिनल साइज़ का उपयोग करें
+      // Use natural dimensions for overlay image
       overlayWidth = overlayImage.naturalWidth;
       overlayHeight = overlayImage.naturalHeight;
       drawCanvas();
@@ -96,18 +182,18 @@
 
     function drawCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // बैकग्राउंड इमेज को ऑरिजिनल साइज़ में ड्रॉ करें
+      // Draw Background Image
       if (bgImage.src) {
         ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
       }
-      // ओवरले इमेज को ड्रॉ करें यदि लोड हो गई हो
+      // Draw Overlay Image if loaded
       if (overlayLoaded) {
         ctx.drawImage(overlayImage, overlayX, overlayY, overlayWidth, overlayHeight);
       }
-      // टेक्स्ट को ड्रॉ करें
+      // Draw Text if provided
       if (textValue) {
         ctx.font = `${textSize}px ${document.getElementById('fontSelector').value}`;
-        ctx.fillStyle = "red";
+        ctx.fillStyle = "yellow";
         ctx.fillText(textValue, textX, textY);
       }
     }
@@ -116,10 +202,10 @@
       const rect = canvas.getBoundingClientRect();
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
-      // ओवरले इमेज के एरिया पर क्लिक चेक करें
+      // Check if click is within overlay image bounds
       if (overlayLoaded && x > overlayX && x < overlayX + overlayWidth && y > overlayY && y < overlayY + overlayHeight) {
         draggingOverlay = true;
-      } else if (textValue && x > textX - 50 && x < textX + 50 && y > textY - 20 && y < textY + 20) {
+      } else if (textValue && x > textX - 50 && x < textX + 50 && y > textY - 30 && y < textY + 30) {
         draggingText = true;
       }
     });
