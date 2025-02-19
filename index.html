@@ -3,44 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Resizer</title>
+    <title>Image Resizer & Cropper</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <style>
         body { text-align: center; font-family: Arial, sans-serif; }
         #preview { margin-top: 20px; }
+        #image-container { max-width: 100%; }
+        img { max-width: 100%; }
     </style>
 </head>
 <body>
-    <h2>Resize Image to 200x300</h2>
+    <h2>Resize & Crop Image to 200x300</h2>
     <input type="file" id="upload" accept="image/*">
-    <canvas id="canvas" style="display:none;"></canvas>
+    <div id="image-container">
+        <img id="image" style="max-width:100%;">
+    </div>
+    <button id="crop">Crop & Download</button>
     <div id="preview"></div>
     <script>
+        let cropper;
         document.getElementById('upload').addEventListener('change', function(event) {
             let file = event.target.files[0];
             if (!file) return;
             let reader = new FileReader();
             reader.onload = function(e) {
-                let img = new Image();
-                img.onload = function() {
-                    let canvas = document.getElementById('canvas');
-                    let ctx = canvas.getContext('2d');
-                    canvas.width = 200;
-                    canvas.height = 300;
-                    ctx.drawImage(img, 0, 0, 200, 300);
-                    let resizedImage = canvas.toDataURL('image/png');
-                    let imgTag = document.createElement('img');
-                    imgTag.src = resizedImage;
-                    let link = document.createElement('a');
-                    link.href = resizedImage;
-                    link.download = 'resized-image.png';
-                    link.innerText = 'Download Image';
-                    document.getElementById('preview').innerHTML = '';
-                    document.getElementById('preview').appendChild(imgTag);
-                    document.getElementById('preview').appendChild(link);
-                }
+                let img = document.getElementById('image');
                 img.src = e.target.result;
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(img, {
+                    aspectRatio: 2 / 3,
+                    viewMode: 2,
+                    zoomable: true,
+                    scalable: true,
+                    movable: true
+                });
             }
             reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('crop').addEventListener('click', function() {
+            if (!cropper) return;
+            let canvas = cropper.getCroppedCanvas({ width: 300, height: 200 });
+            let resizedImage = canvas.toDataURL('image/png');
+            let imgTag = document.createElement('img');
+            imgTag.src = resizedImage;
+            let link = document.createElement('a');
+            link.href = resizedImage;
+            link.download = 'resized-image.png';
+            link.innerText = 'Download Image';
+            document.getElementById('preview').innerHTML = '';
+            document.getElementById('preview').appendChild(imgTag);
+            document.getElementById('preview').appendChild(link);
         });
     </script>
 </body>
