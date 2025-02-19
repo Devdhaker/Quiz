@@ -3,114 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Image Resizer & Cropper</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <title>Image Editor</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f8f9fa; }
-        .container { max-width: 600px; margin-top: 30px; }
-        #image-container, #background-container { max-width: 100%; height: auto; margin-top: 20px; }
-        img { max-width: 100%; display: block; margin: auto; }
-        .btn-custom { width: 100%; margin-top: 10px; }
-        #preview img { max-width: 100%; border-radius: 10px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #canvas-container {
+            position: relative;
+            display: inline-block;
+            border: 1px solid black;
+        }
+        canvas {
+            cursor: move;
+        }
     </style>
 </head>
 <body>
-    <div class="container bg-white p-4 rounded shadow">
-        <h2 class="text-center mb-4">Resize & Crop Image</h2>
-        <input type="file" class="form-control" id="upload" accept="image/*">
-        <div class="mt-3">
-            <label class="form-label">Width:</label>
-            <input type="number" class="form-control" id="width" value="200">
-            <label class="form-label mt-2">Height:</label>
-            <input type="number" class="form-control" id="height" value="300">
-        </div>
-        <div id="image-container" class="mt-3">
-            <img id="image">
-        </div>
-        
-        <h4 class="text-center mt-4">Select Background Image (1080x1920)</h4>
-        <input type="file" class="form-control" id="upload-background" accept="image/*">
-        <div id="background-container" class="mt-3">
-            <img id="background" style="width: 100%; height: auto;">
-        </div>
-        
-        <button id="crop" class="btn btn-primary btn-custom">Crop & Merge</button>
-        <div id="preview" class="mt-3 text-center"></div>
+    <h2>Upload Your Image</h2>
+    <input type="file" id="bgUpload" accept="image/*">
+    <input type="file" id="overlayUpload" accept="image/*">
+    <input type="text" id="textInput" placeholder="Enter text">
+    <button onclick="addText()">Add Text</button>
+    <div id="canvas-container">
+        <canvas id="editorCanvas"></canvas>
     </div>
-    
+    <button onclick="downloadImage()">Download</button>
+
     <script>
-        let cropper;
-        document.getElementById('upload').addEventListener('change', function(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                let img = document.getElementById('image');
-                img.src = e.target.result;
-                if (cropper) cropper.destroy();
-                cropper = new Cropper(img, {
-                    aspectRatio: NaN,
-                    viewMode: 2,
-                    zoomable: true,
-                    scalable: true,
-                    movable: true,
-                });
-            }
-            reader.readAsDataURL(file);
-        });
-        
-        document.getElementById('upload-background').addEventListener('change', function(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('background').src = e.target.result;
-            }
-            reader.readAsDataURL(file);
-        });
-        
-        document.getElementById('crop').addEventListener('click', function() {
-            if (!cropper) return;
-            let width = parseInt(document.getElementById('width').value) || 200;
-            let height = parseInt(document.getElementById('height').value) || 300;
-            let canvas = cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
-            
-            let bgImg = document.getElementById('background');
-            if (!bgImg.src) {
-                alert('Please select a background image.');
-                return;
-            }
-            
-            let finalCanvas = document.createElement('canvas');
-            finalCanvas.width = 1080;
-            finalCanvas.height = 1920;
-            let ctx = finalCanvas.getContext('2d');
-            
-            let bg = new Image();
-            bg.src = bgImg.src;
-            bg.onload = function() {
-                ctx.drawImage(bg, 0, 0, 1080, 1920);
-                let croppedImg = new Image();
-                croppedImg.src = canvas.toDataURL('image/png', 1.0);
-                croppedImg.onload = function() {
-                    ctx.drawImage(croppedImg, (200 - width) / 2, (300 - height) / 2, width, height);
-                    let finalImage = finalCanvas.toDataURL('image/png', 1.0);
-                    
-                    let imgTag = document.createElement('img');
-                    imgTag.src = finalImage;
-                    let link = document.createElement('a');
-                    link.href = finalImage;
-                    link.download = 'final-image.png';
-                    link.className = 'btn btn-success mt-2';
-                    link.innerText = 'Download Merged Image';
-                    document.getElementById('preview').innerHTML = '';
-                    document.getElementById('preview').appendChild(imgTag);
-                    document.getElementById('preview').appendChild(link);
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        let bgImage = new Image();
+        let overlayImage = new Image();
+        let overlayLoaded = false;
+        let textValue = "";
+
+        canvas.width = 500;
+        canvas.height = 400;
+
+        document.getElementById('bgUpload').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    bgImage.src = e.target.result;
+                    bgImage.onload = function () {
+                        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+                    };
                 };
-            };
+                reader.readAsDataURL(file);
+            }
         });
+
+        document.getElementById('overlayUpload').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    overlayImage.src = e.target.result;
+                    overlayImage.onload = function () {
+                        overlayLoaded = true;
+                        ctx.drawImage(overlayImage, 100, 100, 100, 100);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function addText() {
+            textValue = document.getElementById('textInput').value;
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "red";
+            ctx.fillText(textValue, 50, 50);
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'edited-image.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
     </script>
 </body>
 </html>
