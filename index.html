@@ -11,6 +11,7 @@
         #preview { margin-top: 20px; }
         #image-container { max-width: 100%; }
         img { max-width: 100%; }
+        #next-btn { display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -24,6 +25,7 @@
     </div>
     <button id="crop">Crop & Download</button>
     <div id="preview"></div>
+    <button id="next-btn">Next</button>
     <script>
         let cropper;
         document.getElementById('upload').addEventListener('change', function(event) {
@@ -62,6 +64,7 @@
             document.getElementById('preview').innerHTML = '';
             document.getElementById('preview').appendChild(imgTag);
             document.getElementById('preview').appendChild(link);
+            document.getElementById('next-btn').style.display = 'block';
         });
     </script>
 </body>
