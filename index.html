@@ -95,7 +95,7 @@
                 let croppedImg = new Image();
                 croppedImg.src = canvas.toDataURL('image/png', 1.0);
                 croppedImg.onload = function() {
-                    ctx.drawImage(croppedImg, (1080 - width) / 2, (1920 - height) / 2, width, height);
+                    ctx.drawImage(croppedImg, (200 - width) / 2, (300 - height) / 2, width, height);
                     let finalImage = finalCanvas.toDataURL('image/png', 1.0);
                     
                     let imgTag = document.createElement('img');
