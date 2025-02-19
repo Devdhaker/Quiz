@@ -59,13 +59,13 @@
             if (!cropper) return;
             let width = parseInt(document.getElementById('width').value) || 200;
             let height = parseInt(document.getElementById('height').value) || 300;
-            let canvas = cropper.getCroppedCanvas({ width: width, height: height, imageSmoothingQuality: 'high' });
-            let resizedImage = canvas.toDataURL('image/png', 1.0); // Maintain high quality
+            let canvas = cropper.getCroppedCanvas({ imageSmoothingQuality: 'high' });
+            let resizedImage = canvas.toDataURL('image/png', 1.0); // Maintain original quality
             let imgTag = document.createElement('img');
             imgTag.src = resizedImage;
             let link = document.createElement('a');
             link.href = resizedImage;
-            link.download = 'resized-image.png';
+            link.download = 'cropped-image.png';
             link.className = 'btn btn-success mt-2';
             link.innerText = 'Download Image';
             document.getElementById('preview').innerHTML = '';
