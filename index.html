@@ -37,6 +37,8 @@
         let overlayImage = new Image();
         let overlayLoaded = false;
         let textValue = "";
+        let overlayX = 100, overlayY = 100, overlayWidth = 100, overlayHeight = 100;
+        let dragging = false;
 
         canvas.width = 500;
         canvas.height = 400;
@@ -48,7 +50,7 @@
                 reader.onload = function (e) {
                     bgImage.src = e.target.result;
                     bgImage.onload = function () {
-                        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+                        drawCanvas();
                     };
                 };
                 reader.readAsDataURL(file);
@@ -63,7 +65,7 @@
                     overlayImage.src = e.target.result;
                     overlayImage.onload = function () {
                         overlayLoaded = true;
-                        ctx.drawImage(overlayImage, 100, 100, 100, 100);
+                        drawCanvas();
                     };
                 };
                 reader.readAsDataURL(file);
@@ -72,10 +74,59 @@
 
         function addText() {
             textValue = document.getElementById('textInput').value;
-            ctx.font = "20px Arial";
-            ctx.fillStyle = "red";
-            ctx.fillText(textValue, 50, 50);
+            drawCanvas();
         }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (bgImage.src) {
+                ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+            }
+            if (overlayLoaded) {
+                ctx.drawImage(overlayImage, overlayX, overlayY, overlayWidth, overlayHeight);
+            }
+            if (textValue) {
+                ctx.font = "20px Arial";
+                ctx.fillStyle = "red";
+                ctx.fillText(textValue, 50, 50);
+            }
+        }
+
+        canvas.addEventListener('mousedown', function (event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            if (x > overlayX && x < overlayX + overlayWidth && y > overlayY && y < overlayY + overlayHeight) {
+                dragging = true;
+            }
+        });
+
+        canvas.addEventListener('mousemove', function (event) {
+            if (dragging) {
+                const rect = canvas.getBoundingClientRect();
+                overlayX = event.clientX - rect.left - overlayWidth / 2;
+                overlayY = event.clientY - rect.top - overlayHeight / 2;
+                drawCanvas();
+            }
+        });
+
+        canvas.addEventListener('mouseup', function () {
+            dragging = false;
+        });
+
+        canvas.addEventListener('wheel', function (event) {
+            if (overlayLoaded) {
+                if (event.deltaY < 0) {
+                    overlayWidth *= 1.1;
+                    overlayHeight *= 1.1;
+                } else {
+                    overlayWidth *= 0.9;
+                    overlayHeight *= 0.9;
+                }
+                drawCanvas();
+                event.preventDefault();
+            }
+        });
 
         function downloadImage() {
             const link = document.createElement('a');
