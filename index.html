@@ -1,28 +1,43 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz System - Home</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #6e8efb, #a777e3); color: white; text-align: center; padding: 20px; }
-        .container { max-width: 600px; background: rgba(255, 255, 255, 0.2); padding: 30px; border-radius: 10px; backdrop-filter: blur(10px); box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2); }
-        h1 { font-size: 32px; margin-bottom: 10px; }
-        p { font-size: 18px; margin-bottom: 20px; }
-        .btn { display: block; margin: 15px auto; padding: 15px; width: 220px; text-decoration: none; background: #fff; color: #333; font-size: 18px; border-radius: 25px; text-align: center; font-weight: bold; transition: 0.3s; }
-        .btn:hover { background: #ffcc00; color: #000; transform: scale(1.05); }
-    </style>
+  <meta charset="UTF-8">
+  <title>Photo Upload with Filter</title>
+  <style>
+    /* CSS class jisse filter apply hoga */
+    .filtered-image {
+      max-width: 100%;
+      filter: grayscale(100%) brightness(1.2) contrast(1.2);
+      transition: filter 0.5s;
+    }
+    /* Hover par filter remove hone ka effect */
+    .filtered-image:hover {
+      filter: none;
+    }
+  </style>
 </head>
 <body>
+  <h2>Apni Photo Upload Karein</h2>
+  <!-- Photo upload ke liye file input -->
+  <input type="file" id="photoInput" accept="image/*">
+  <br><br>
+  <!-- Uploaded photo yahan display hogi -->
+  <img id="displayImage" class="filtered-image" src="" alt="Uploaded Photo" style="display:none;">
 
-    <div class="container">
-        <h1>🎉 Welcome to the Quiz System</h1>
-        <p>🚀 Admin Panel से नए Quiz जोड़ें या User के रूप में Quiz खेलें!</p>
-
-        <a href="quiz_admin.html" class="btn">🔧 Admin Panel</a>
-        <a href="quiz_user.html" class="btn">🎮 Play Quiz</a>
-    </div>
-
+  <script>
+    // JavaScript se uploaded file ko read karke image tag me dikhate hain
+    document.getElementById('photoInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('displayImage');
+          img.src = e.target.result;
+          img.style.display = 'block';
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
 </body>
 </html>
