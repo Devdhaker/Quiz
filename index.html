@@ -4,10 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Premium Image Editor</title>
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;600&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    /* Global Styles */
     body {
       margin: 0;
       padding: 0;
@@ -16,17 +14,13 @@
       color: #fff;
       text-align: center;
       overflow-x: hidden;
-      transition: background 0.5s ease;
     }
     h2 {
       margin-top: 20px;
       font-size: 2.5em;
       font-family: 'Montserrat', sans-serif;
     }
-    /* Input & Select Styles */
-    input[type="file"],
-    input[type="text"],
-    select {
+    input[type="file"], input[type="text"], select {
       margin: 10px;
       padding: 10px;
       border: none;
@@ -46,7 +40,6 @@
       background: #fff;
       color: #333;
     }
-    /* Button Styles */
     button {
       margin: 10px;
       padding: 10px 20px;
@@ -63,32 +56,16 @@
       background: #333;
       color: #fff;
     }
-    /* Canvas Container */
     #canvas-container {
       position: relative;
       display: inline-block;
-      border: 30px solid #fff;
+      border: 2px solid #fff;
       margin-top: 20px;
-      box-shadow: 220px 2200px 220px rgba(0, 0, 0, 0.2);
-      transition: transform 0.3s ease;
+      box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
       background: #000;
-    }
-    #canvas-container:hover {
-      transform: scale(1.02);
     }
     canvas {
       cursor: move;
-      max-width: 60%;
-      height: auto;
-    }
-    @media (max-width: 768px) {
-      h2 {
-        font-size: 2em;
-      }
-      button {
-        padding: 8px 16px;
-        font-size: 0.9em;
-      }
     }
   </style>
 </head>
@@ -132,16 +109,9 @@
     let draggingOverlay = false;
     let draggingText = false;
 
-    // Variables for pinch gesture (scaling overlay)
-    let initialDistance = null;
-    let initialOverlayWidth = null;
-    let initialOverlayHeight = null;
-
-    // Set initial canvas dimensions as placeholder
     canvas.width = 800;
     canvas.height = 600;
 
-    // Background Image Upload
     document.getElementById('bgUpload').addEventListener('change', function (event) {
       const file = event.target.files[0];
       if (file) {
@@ -154,13 +124,11 @@
     });
 
     bgImage.onload = function () {
-      // Set canvas dimensions to background image's natural size
       canvas.width = bgImage.naturalWidth;
       canvas.height = bgImage.naturalHeight;
       drawCanvas();
     };
 
-    // Overlay Image Upload
     document.getElementById('overlayUpload').addEventListener('change', function (event) {
       const file = event.target.files[0];
       if (file) {
@@ -174,9 +142,8 @@
 
     overlayImage.onload = function () {
       overlayLoaded = true;
-      // Use natural dimensions for overlay image
-      overlayWidth = overlayImage.naturalWidth;
-      overlayHeight = overlayImage.naturalHeight;
+      overlayWidth = overlayImage.naturalWidth / 2;
+      overlayHeight = overlayImage.naturalHeight / 2;
       drawCanvas();
     };
 
@@ -187,15 +154,12 @@
 
     function drawCanvas() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Draw Background Image
       if (bgImage.src) {
         ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
       }
-      // Draw Overlay Image if loaded
       if (overlayLoaded) {
         ctx.drawImage(overlayImage, overlayX, overlayY, overlayWidth, overlayHeight);
       }
-      // Draw Text if provided
       if (textValue) {
         ctx.font = `${textSize}px ${document.getElementById('fontSelector').value}`;
         ctx.fillStyle = "yellow";
@@ -203,24 +167,14 @@
       }
     }
 
-    // Helper function to get canvas coordinates from event
     function getEventCoords(event) {
       const rect = canvas.getBoundingClientRect();
-      let clientX, clientY;
-      if (event.touches && event.touches.length > 0) {
-        clientX = event.touches[0].clientX;
-        clientY = event.touches[0].clientY;
-      } else {
-        clientX = event.clientX;
-        clientY = event.clientY;
-      }
       return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
       };
     }
 
-    // Mouse events
     canvas.addEventListener('mousedown', function (event) {
       const pos = getEventCoords(event);
       if (overlayLoaded && pos.x > overlayX && pos.x < overlayX + overlayWidth && pos.y > overlayY && pos.y < overlayY + overlayHeight) {
@@ -251,85 +205,6 @@
     canvas.addEventListener('mouseleave', function () {
       draggingOverlay = false;
       draggingText = false;
-    });
-
-    // Touch events for mobile
-    canvas.addEventListener('touchstart', function (event) {
-      event.preventDefault();
-      if (event.touches.length === 1) {
-        const pos = getEventCoords(event);
-        if (overlayLoaded && pos.x > overlayX && pos.x < overlayX + overlayWidth && pos.y > overlayY && pos.y < overlayY + overlayHeight) {
-          draggingOverlay = true;
-        } else if (textValue && pos.x > textX - 50 && pos.x < textX + 50 && pos.y > textY - 30 && pos.y < textY + 30) {
-          draggingText = true;
-        }
-      } else if (event.touches.length === 2 && overlayLoaded) {
-        // Pinch gesture start
-        initialDistance = Math.hypot(
-          event.touches[0].clientX - event.touches[1].clientX,
-          event.touches[0].clientY - event.touches[1].clientY
-        );
-        initialOverlayWidth = overlayWidth;
-        initialOverlayHeight = overlayHeight;
-      }
-    }, {passive: false});
-
-    canvas.addEventListener('touchmove', function (event) {
-      event.preventDefault();
-      if (event.touches.length === 1) {
-        const pos = getEventCoords(event);
-        if (draggingOverlay) {
-          overlayX = pos.x - overlayWidth / 2;
-          overlayY = pos.y - overlayHeight / 2;
-          drawCanvas();
-        } else if (draggingText) {
-          textX = pos.x;
-          textY = pos.y;
-          drawCanvas();
-        }
-      } else if (event.touches.length === 2 && overlayLoaded && initialDistance) {
-        // Pinch gesture move: scale overlay image
-        const currentDistance = Math.hypot(
-          event.touches[0].clientX - event.touches[1].clientX,
-          event.touches[0].clientY - event.touches[1].clientY
-        );
-        const scale = currentDistance / initialDistance;
-        overlayWidth = initialOverlayWidth * scale;
-        overlayHeight = initialOverlayHeight * scale;
-        drawCanvas();
-      }
-    }, {passive: false});
-
-    canvas.addEventListener('touchend', function (event) {
-      // Reset drag flags if no touches remain
-      if (event.touches.length === 0) {
-        draggingOverlay = false;
-        draggingText = false;
-        initialDistance = null;
-      }
-    });
-
-    // Wheel event for desktop scaling (if needed)
-    canvas.addEventListener('wheel', function (event) {
-      if (overlayLoaded) {
-        if (event.deltaY < 0) {
-          overlayWidth *= 1.1;
-          overlayHeight *= 1.1;
-        } else {
-          overlayWidth *= 0.9;
-          overlayHeight *= 0.9;
-        }
-        drawCanvas();
-        event.preventDefault();
-      } else if (textValue) {
-        if (event.deltaY < 0) {
-          textSize += 2;
-        } else {
-          textSize -= 2;
-        }
-        drawCanvas();
-        event.preventDefault();
-      }
     });
 
     function downloadImage() {
